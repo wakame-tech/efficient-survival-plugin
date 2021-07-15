@@ -1,0 +1,5 @@
+name: EfficientSurvival
+version: @version@
+main: tech.wakame.efficient_survival.EfficientSurvival
+api-version: '1.16'
+author: wakame_tech
