@@ -1,4 +1,4 @@
-package tech.wakame.efficient_survival.namedlocation
+package tech.wakame.efficient_survival.util
 
 import java.util.*
 

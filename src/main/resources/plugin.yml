@@ -16,3 +16,6 @@ commands:
   locs:
     description: list named locations
     usage: /<command>
+  caveanalysis:
+    description: analysis cave
+    usage: /<command>

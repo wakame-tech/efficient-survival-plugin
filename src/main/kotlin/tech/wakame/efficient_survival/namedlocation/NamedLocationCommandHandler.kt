@@ -8,8 +8,9 @@ import org.bukkit.entity.Player
 import tech.wakame.efficient_survival.util.CommandHandler
 import tech.wakame.efficient_survival.util.colored
 import tech.wakame.efficient_survival.util.inspect
+import tech.wakame.efficient_survival.util.toParamsAndOptions
 
-class NamedLocationEventHandler(private val namedLocationUseCase: INamedLocationUseCase): CommandHandler {
+class NamedLocationCommandHandler(private val namedLocationUseCase: INamedLocationUseCase): CommandHandler {
     /**
      * A map of command to handler
      */
