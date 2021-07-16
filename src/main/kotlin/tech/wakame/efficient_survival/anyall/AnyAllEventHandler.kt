@@ -98,7 +98,6 @@ object AnyAllEventHandler : Listener {
             diffs.forEach {
                 val nextTarget = target.getRelative(it.first, it.second, it.third)
                 if (nextTarget.type == type) {
-                    event.player.sendMessage(nextTarget.location.inspect())
                     limit--
                     blockBreak(nextTarget)
                 }
