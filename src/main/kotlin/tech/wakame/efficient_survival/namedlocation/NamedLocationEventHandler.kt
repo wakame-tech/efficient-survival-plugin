@@ -1,15 +1,9 @@
 package tech.wakame.efficient_survival.namedlocation
 
-import org.bukkit.Location
 import org.bukkit.command.CommandSender
-import org.bukkit.configuration.Configuration
 import org.bukkit.entity.Player
 import tech.wakame.efficient_survival.util.CommandHandler
-
-/**
- *  [Location] to easy string, such as "(X, Y, Z)"
- */
-fun Location.inspect() = "(${x.toInt()}, ${y.toInt()}, ${z.toInt()})"
+import tech.wakame.efficient_survival.util.inspect
 
 class NamedLocationEventHandler(private val namedLocationUseCase: INamedLocationUseCase): CommandHandler {
     /**

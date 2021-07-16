@@ -8,10 +8,12 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.Damageable
 import java.lang.Integer.max
+import tech.wakame.efficient_survival.util.inspect
 import java.util.*
 
-object AnyAllEventHandler: Listener {
+object AnyAllEventHandler : Listener {
     @EventHandler
     fun onBlockBreak(event: BlockBreakEvent) {
         val tool = event.player.inventory.itemInMainHand
@@ -27,13 +29,35 @@ object AnyAllEventHandler: Listener {
         val type = block.type
         val dest = event.player.location
 
-        val directions = arrayOf(
-                BlockFace.DOWN,
-                BlockFace.UP,
-                BlockFace.SOUTH,
-                BlockFace.NORTH,
-                BlockFace.EAST,
-                BlockFace.WEST
+        val diffs = arrayOf(
+                Triple(-1, -1, -1),
+                Triple(-1, -1, 0),
+                Triple(-1, -1, 1),
+                Triple(-1, 0, -1),
+                Triple(-1, 0, 0),
+                Triple(-1, 0, 1),
+                Triple(-1, 1, -1),
+                Triple(-1, 1, 0),
+                Triple(-1, 1, 1),
+
+                Triple(0, -1, -1),
+                Triple(0, -1, 0),
+                Triple(0, -1, 1),
+                Triple(0, 0, -1),
+                Triple(0, 0, 1),
+                Triple(0, 1, -1),
+                Triple(0, 1, 0),
+                Triple(0, 1, 1),
+
+                Triple(1, -1, -1),
+                Triple(1, -1, 0),
+                Triple(1, -1, 1),
+                Triple(1, 0, -1),
+                Triple(1, 0, 0),
+                Triple(1, 0, 1),
+                Triple(1, 1, -1),
+                Triple(1, 1, 0),
+                Triple(1, 1, 1)
         )
 
         fun blockBreak(target: Block) {
@@ -55,14 +79,26 @@ object AnyAllEventHandler: Listener {
                     target.drops.first()
                 }
             }.let {
+                // get damage
+                if (tool.hasItemMeta() && tool.itemMeta is Damageable) {
+                    val unbreakableLevel = if (Enchantment.LOOT_BONUS_BLOCKS in tool.enchantments.keys) tool.enchantments[Enchantment.DURABILITY]!! else 0
+                    val damagePercent = 100 / (unbreakableLevel + 1)
+
+                    if (Random().nextInt(101) < damagePercent) {
+                        tool.itemMeta = tool.itemMeta.apply {
+                            (this as Damageable).damage -= 1
+                        }
+                    }
+                }
                 dest.world?.dropItemNaturally(dest, it)
             }
 
             target.type = Material.AIR
 
-            directions.forEach {
-                val nextTarget = target.getRelative(it, 1)
+            diffs.forEach {
+                val nextTarget = target.getRelative(it.first, it.second, it.third)
                 if (nextTarget.type == type) {
+                    event.player.sendMessage(nextTarget.location.inspect())
                     limit--
                     blockBreak(nextTarget)
                 }
