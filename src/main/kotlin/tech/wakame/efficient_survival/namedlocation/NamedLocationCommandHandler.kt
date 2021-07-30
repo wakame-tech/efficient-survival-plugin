@@ -10,7 +10,7 @@ import tech.wakame.efficient_survival.util.colored
 import tech.wakame.efficient_survival.util.inspect
 import tech.wakame.efficient_survival.util.toParamsAndOptions
 
-class NamedLocationCommandHandler(private val namedLocationUseCase: INamedLocationUseCase): CommandHandler {
+class NamedLocationCommandHandler(private val namedLocationUseCase: INamedLocationUseCase) : CommandHandler {
     /**
      * A map of command to handler
      */
@@ -19,10 +19,7 @@ class NamedLocationCommandHandler(private val namedLocationUseCase: INamedLocati
     override val labels: Set<String> = handlers.keys
 
     init {
-        handlers["addloc"] = ::registerLocation
-        handlers["rmloc"] = ::removeNamedLocation
-        handlers["tpn"] = ::teleportToNamedLocation
-        handlers["locs"] = ::listNamedLocations
+        handlers["nl"] = ::nl
     }
 
     override fun onCommand(sender: CommandSender, label: String, args: Array<out String>?): Boolean {
@@ -34,70 +31,45 @@ class NamedLocationCommandHandler(private val namedLocationUseCase: INamedLocati
         }
     }
 
-    /**
-     * register a location where the player is.
-     * @return result of command
-     */
-    private fun registerLocation(sender: CommandSender, params: Array<String>, options: Map<String, String?>): Boolean {
+    private fun nl(sender: CommandSender, params: Array<String>, options: Map<String, String?>): Boolean {
         if (sender !is Player)
             return false
 
-        if (params.isEmpty()) {
-            return false
+        return when {
+            params.size == 2 && params[0] == "tp" -> teleportToNamedLocation(sender, params[1])
+            params.size == 2 && params[0] == "add" -> registerLocation(sender, params[1])
+            params.size == 2 && params[0] == "rm" -> removeNamedLocation(sender, params[1])
+            params.size == 1 && params[0] == "ls" -> listNamedLocations(sender)
+            else -> false
         }
+    }
 
-        namedLocationUseCase.registerLocation(params.first(), sender.location)
-        sender.sendMessage("${sender.location.inspect()} has been set as ${params.first()}")
+    private fun registerLocation(player: Player, label: String): Boolean {
+        namedLocationUseCase.registerLocation(label, player.location)
+        player.sendMessage("${player.location.inspect()} has been set as $label")
         return true
     }
 
-    /**
-     * tereport the player to named location.
-     * @return result of command
-     */
-    private fun teleportToNamedLocation(sender: CommandSender, params: Array<String>, options: Map<String, String?>):Boolean {
-        if (sender !is Player)
-            return false
-
-        if (params.isEmpty()) {
-            return false
-        }
-
-        val entry = namedLocationUseCase.getLocation(params.first())
+    private fun teleportToNamedLocation(player: Player, label: String): Boolean {
+        val entry = namedLocationUseCase.getLocation(label)
 
         if (entry == null) {
-            sender.sendMessage("location ${params.first()} not found")
+            player.sendMessage("location $label not found")
             return true
         }
 
-        sender.teleport(entry.location)
-        sender.sendMessage("tereported to ${params.first()}")
+        player.teleport(entry.location)
+        player.sendMessage("tp to $label")
         return true
     }
 
-    /**
-     * unregister a location
-     * @return result of command
-     */
-    private fun removeNamedLocation(sender: CommandSender, params: Array<String>, options: Map<String, String?>): Boolean {
-        if (sender !is Player)
-            return false
-
-        if (params.isEmpty()) {
-            return false
-        }
-
-        namedLocationUseCase.deleteLocation(params.first())
-        sender.sendMessage("${params.first()} has been removed")
+    private fun removeNamedLocation(player: Player, label: String): Boolean {
+        namedLocationUseCase.deleteLocation(label)
+        player.sendMessage("$label has been removed")
         return true
     }
 
-    /**
-     * list named locations
-     * @return result of command
-     */
-    private fun listNamedLocations(sender: CommandSender, params: Array<String>, options: Map<String, String?>):Boolean {
-        if (sender !is Player) return false
+    private fun listNamedLocations(player: Player): Boolean {
         val message = namedLocationUseCase.getLocations().map { namedLocation ->
             TextComponent().apply {
                 addExtra(TextComponent("%-10s".format("${namedLocation.label}")))
@@ -109,7 +81,7 @@ class NamedLocationCommandHandler(private val namedLocationUseCase: INamedLocati
             }
         }.toTypedArray()
 
-        sender.spigot().sendMessage(*message)
+        player.spigot().sendMessage(*message)
 
         return true
     }

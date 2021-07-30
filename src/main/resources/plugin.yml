@@ -4,18 +4,9 @@ main: tech.wakame.efficient_survival.EfficientSurvival
 api-version: '1.16'
 author: wakame_tech
 commands:
-  addloc:
-    description: register a location where the player is.
-    usage: /<command> <label>
-  rmloc:
-    description: unregister a location where the player is.
-    usage: /<command> <label>
-  tpn:
-    description: tereport the player to named location.
-    usage: /<command> <label>
-  locs:
-    description: list named locations
-    usage: /<command>
+  nl:
+    description: manage named location
+    usage: /<command> <subcommand> <params...>
   caveanalysis:
     description: analysis cave
     usage: /<command>
