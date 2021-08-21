@@ -2,11 +2,20 @@ package tech.wakame.efficient_survival.util
 
 import org.bukkit.command.CommandSender
 
-interface CommandHandler {
+open class CommandHandler {
+    open val handlers: MutableMap<String, (CommandSender, Array<String>, Map<String, String?>) -> Boolean> = mutableMapOf()
+
     /**
      * available commands
      */
-    val labels: Set<String>
+    open val labels: Set<String> = handlers.keys
 
-    fun onCommand(sender: CommandSender, label: String, args: Array<out String>?): Boolean
+    open fun onCommand(sender: CommandSender, label: String, args: Array<out String>?): Boolean {
+        return if (label in labels && args != null) {
+            val (params, options) = args.toParamsAndOptions()
+            handlers[label]!!.invoke(sender, params, options)
+        } else {
+            false
+        }
+    }
 }
