@@ -17,25 +17,9 @@ import kotlin.math.abs
 import kotlin.system.measureTimeMillis
 
 
-class CaveAnalyzerCommandHandler: CommandHandler {
-    /**
-     * A map of command to handler
-     */
-    private val handlers: MutableMap<String, (CommandSender, Array<String>, Map<String, String?>) -> Boolean> = mutableMapOf()
-
-    override val labels: Set<String> = handlers.keys
-
+class CaveAnalyzerCommandHandler: CommandHandler() {
     init {
         handlers["caveanalysis"] = ::caveAnalysis
-    }
-
-    override fun onCommand(sender: CommandSender, label: String, args: Array<out String>?): Boolean {
-        return if (label in labels && args != null) {
-            val (params, options) = args.toParamsAndOptions()
-            handlers[label]!!.invoke(sender, params, options)
-        } else {
-            false
-        }
     }
 
     private fun _caveAnalysisImpl(sender: Player, start: Location, options: Map<String, String?>) {

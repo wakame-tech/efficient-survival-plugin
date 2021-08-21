@@ -10,25 +10,12 @@ import tech.wakame.efficient_survival.util.colored
 import tech.wakame.efficient_survival.util.inspect
 import tech.wakame.efficient_survival.util.toParamsAndOptions
 
-class NamedLocationCommandHandler(private val namedLocationUseCase: INamedLocationUseCase) : CommandHandler {
-    /**
-     * A map of command to handler
-     */
-    private val handlers: MutableMap<String, (CommandSender, Array<String>, Map<String, String?>) -> Boolean> = mutableMapOf()
-
-    override val labels: Set<String> = handlers.keys
+class NamedLocationCommandHandler(
+    private val namedLocationUseCase: INamedLocationUseCase
+    ) : CommandHandler() {
 
     init {
         handlers["nl"] = ::nl
-    }
-
-    override fun onCommand(sender: CommandSender, label: String, args: Array<out String>?): Boolean {
-        return if (label in labels && args != null) {
-            val (params, options) = args.toParamsAndOptions()
-            handlers[label]!!.invoke(sender, params, options)
-        } else {
-            false
-        }
     }
 
     private fun nl(sender: CommandSender, params: Array<String>, options: Map<String, String?>): Boolean {
