@@ -10,3 +10,8 @@ commands:
   caveanalysis:
     description: analysis cave
     usage: /<command>
+  vc:
+    description: virtual chest
+    usage: /<command> <subcommand> <params...>
+  expconvert:
+    description: player exp to exp bottle

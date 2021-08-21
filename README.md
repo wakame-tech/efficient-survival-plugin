@@ -1,6 +1,13 @@
 # efficient_survival
 minimal plugins for more your survival efficient.
 
+## packages
+- `namedlocation`
+- `virtualchest`
+- `caveanalyzer`
+- `anyall`
+- `portableexp`
+
 ## Commands
 ### namedlocation
 | command        | desc                    | 
