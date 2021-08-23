@@ -20,8 +20,8 @@ class VirtualChestCommandHandler(private val useCase: VirtualChestUseCase) : Com
         }
     }
 
-    private fun open(player: Player): Boolean {
-        val panel = useCase.getVirtualChestPanel()
+    private fun open(player: Player, panelType: VirtualChestPanelType): Boolean {
+        val panel = useCase.getVirtualChestPanel(panelType)
         player.openInventory(panel[VirtualChestEventHandler.currentPageIndex])
         return true
     }
@@ -42,7 +42,7 @@ class VirtualChestCommandHandler(private val useCase: VirtualChestUseCase) : Com
             return false
 
         return when {
-            params.size == 1 && params[0] == "open" -> open(sender)
+            params.size == 1 && params[0] == "open" -> open(sender, VirtualChestPanelType.ByChest)
             params.size == 1 && params[0] == "ls" -> summary(sender)
             else -> false
         }

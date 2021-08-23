@@ -87,6 +87,18 @@ fun blockBreakWithTool(target: Block, tool: ItemStack, dest: Location) {
 
 class AnyAllEventHandler : Listener {
     @EventHandler
+    fun warnToolDurabilityLow(event: BlockBreakEvent) {
+        val tool = event.player.inventory.itemInMainHand
+        if (tool.itemMeta !is Damageable) {
+            return
+        }
+        val durability = tool.type.maxDurability - (tool.itemMeta as Damageable).damage
+        if (durability < 10) {
+            event.player.sendMessage("[WARN] this tool will break soon. durability: $durability")
+        }
+    }
+
+    @EventHandler
     fun onBlockBreak(event: BlockBreakEvent) {
         val tool = event.player.inventory.itemInMainHand
         val block = event.block

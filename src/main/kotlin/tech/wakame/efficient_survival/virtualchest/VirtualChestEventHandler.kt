@@ -15,7 +15,15 @@ import java.lang.Math.min
 
 class VirtualChestEventHandler(private val useCase: VirtualChestUseCase) : Listener {
     companion object {
+        /**
+         * 現在のページ
+         */
         var currentPageIndex = 0
+
+        /**
+         * 現在のパネルタイプ
+         */
+        var currentPanelType = VirtualChestPanelType.ByChest
     }
 
     @EventHandler
@@ -37,35 +45,13 @@ class VirtualChestEventHandler(private val useCase: VirtualChestUseCase) : Liste
         val player = event.whoClicked as Player
 
         if (event.clickedInventory == null) {
-            val panel = useCase.getVirtualChestPanel()
+            val panel = useCase.getVirtualChestPanel(currentPanelType)
             player.openInventory(panel[0])
         }
 
         if (event.view.title != VirtualChestConfig.virtualChestName)
             return
 
-        when (event.rawSlot) {
-            in 0 until 45 -> {
-                if (event.slot !in event.view.topInventory.toList().filterNotNull().indices)
-                    return
-
-                val chestKey = event.view.topInventory.getItem(event.slot)!!.itemMeta?.displayName ?: return
-                player.sendMessage(chestKey)
-                useCase.getInventory(chestKey)
-                    ?.let { player.openInventory(it) }
-            }
-            VirtualChestConfig.prevIndex -> {
-                val panel = useCase.getVirtualChestPanel()
-                currentPageIndex = max(0, currentPageIndex - 1)
-                player.openInventory(panel[currentPageIndex])
-            }
-            VirtualChestConfig.nextIndex -> {
-                val panel = useCase.getVirtualChestPanel()
-                currentPageIndex = min(panel.lastIndex, currentPageIndex + 1)
-                player.openInventory(panel[currentPageIndex])
-            }
-        }
-
-
+        useCase.clickIndex(player, currentPanelType, currentPageIndex, event.rawSlot)
     }
 }
