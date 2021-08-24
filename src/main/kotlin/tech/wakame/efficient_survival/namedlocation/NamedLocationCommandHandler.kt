@@ -63,7 +63,15 @@ class NamedLocationCommandHandler(
                 addExtra(TextComponent("%-20s".format("@${namedLocation.location.world?.name ?: "---"} ${namedLocation.location.inspect()}")))
                 addExtra(TextComponent("%-15s".format("yellow{tp here}".colored())).apply {
                     hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, arrayOf(TextComponent("クリックしてテレポート")))
-                    clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tp @p ${namedLocation.location.blockX} ${namedLocation.location.blockY} ${namedLocation.location.blockZ}")
+
+                    val world = when (namedLocation.location.world?.name) {
+                        "world" -> "minecraft:overworld"
+                        "world_nether" -> "minecraft:the_nether"
+                        "world_end" -> "minecraft:the_end"
+                        else -> return false
+                    }
+                    val coords = "${namedLocation.location.blockX} ${namedLocation.location.blockY} ${namedLocation.location.blockZ}"
+                    clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, "/execute in $world run tp $coords")
                 })
                 addExtra("\n")
             }

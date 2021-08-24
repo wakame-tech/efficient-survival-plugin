@@ -89,7 +89,7 @@ class AnyAllEventHandler : Listener {
     @EventHandler
     fun warnToolDurabilityLow(event: BlockBreakEvent) {
         val tool = event.player.inventory.itemInMainHand
-        if (tool.itemMeta !is Damageable) {
+        if (tool.itemMeta !is Damageable || !Tools.Tools.contains(tool.type)) {
             return
         }
         val durability = tool.type.maxDurability - (tool.itemMeta as Damageable).damage

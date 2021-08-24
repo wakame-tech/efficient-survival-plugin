@@ -47,11 +47,23 @@ class VirtualChestEventHandler(private val useCase: VirtualChestUseCase) : Liste
         if (event.clickedInventory == null) {
             val panel = useCase.getVirtualChestPanel(currentPanelType)
             player.openInventory(panel[0])
+            return
         }
 
         if (event.view.title != VirtualChestConfig.virtualChestName)
             return
 
-        useCase.clickIndex(player, currentPanelType, currentPageIndex, event.rawSlot)
+        event.isCancelled = true
+
+        if (!event.isLeftClick) {
+            return
+        }
+
+        player.sendMessage(currentPageIndex.toString())
+        useCase.clickIndex(currentPanelType, currentPageIndex, event.rawSlot)
+            ?.let {
+                player.closeInventory()
+                player.openInventory(it)
+            }
     }
 }

@@ -83,8 +83,10 @@ class VirtualChestUseCase(private val repo: IVirtualChestRepository) {
             .summary()
             .take(10)
         return if (items.isEmpty()) {
+            val desc = listOf("@${inventory.location?.world?.name ?: "---"}")
             ItemStack(Material.CHEST)
                 .renamed(label)
+                .lored(desc)
         } else {
             val desc = listOf("@${inventory.location?.world?.name ?: "---"}") +
                     items
@@ -168,48 +170,52 @@ class VirtualChestUseCase(private val repo: IVirtualChestRepository) {
         return null
     }
 
-    fun clickIndex(player: Player, type: VirtualChestPanelType, page: Int, index: Int) {
+    fun clickIndex(type: VirtualChestPanelType, page: Int, index: Int): Inventory? {
         val panels = getVirtualChestPanel(type)
         val panel = panels[page]
 
         when (index) {
             in 0 until 45 -> {
                 if (index !in panel.toList().filterNotNull().indices)
-                    return
+                    return null
 
                 when (type) {
                     VirtualChestPanelType.ByChest -> {
-                        val chestKey = panel.getItem(index)!!.itemMeta?.displayName ?: return
-                        player.sendMessage("key: $chestKey")
-                        getInventory(chestKey)
-                            ?.let { player.openInventory(it) }
+                        val chestKey = panel.getItem(index)!!.itemMeta?.displayName ?: return null
+                        return getInventory(chestKey)
                     }
                     VirtualChestPanelType.ByAmount -> {
-                        player.sendMessage("click: ${panel.getItem(index)!!.type}")
+                        return null
                         // TODO: withdraw item from chests
                     }
                 }
             }
             VirtualChestConfig.prev.index -> {
                 VirtualChestEventHandler.currentPageIndex =
-                    Integer.max(0, index - 1)
-                player.openInventory(panel)
+                    Integer.max(0, page - 1)
+                val newPanel = getVirtualChestPanel(type)[VirtualChestEventHandler.currentPageIndex]
+                return newPanel
             }
             VirtualChestConfig.chest.index -> {
                 VirtualChestEventHandler.currentPageIndex = 0
                 VirtualChestEventHandler.currentPanelType = VirtualChestPanelType.ByChest
-                player.openInventory(panel)
+                val newPanel = getVirtualChestPanel(VirtualChestEventHandler.currentPanelType)[VirtualChestEventHandler.currentPageIndex]
+                return newPanel
             }
             VirtualChestConfig.amount.index -> {
                 VirtualChestEventHandler.currentPageIndex = 0
                 VirtualChestEventHandler.currentPanelType = VirtualChestPanelType.ByAmount
-                player.openInventory(panel)
+                val newPanel = getVirtualChestPanel(VirtualChestEventHandler.currentPanelType)[VirtualChestEventHandler.currentPageIndex]
+                return newPanel
             }
             VirtualChestConfig.next.index -> {
                 VirtualChestEventHandler.currentPageIndex =
-                    Math.min(panels.lastIndex, index + 1)
-                player.openInventory(panel)
+                    Math.min(panels.lastIndex, page + 1)
+                val newPanel = getVirtualChestPanel(VirtualChestEventHandler.currentPanelType)[VirtualChestEventHandler.currentPageIndex]
+                return newPanel
             }
         }
+
+        return null
     }
 }

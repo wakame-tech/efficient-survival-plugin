@@ -29,4 +29,6 @@ object Tools {
             Material.STONE_SHOVEL,
             Material.WOODEN_SHOVEL
     )
+
+    val Tools = arrayOf(*Pickaxes, *Axes, *Shovels)
 }
