@@ -29,20 +29,16 @@ class VirtualChestRepository(private val config: Configuration) : IVirtualChestR
     }
 }
 
+enum class VirtualChestPanelType {
+    /**
+     * チェスト毎
+     */
+    ByChest,
 
-fun createInventoryIcon(label: String, inventory: Inventory): ItemStack {
-    val items = inventory.summary()
-        .take(10)
-    return if (items.isEmpty()) {
-        ItemStack(Material.CHEST)
-            .renamed(label)
-    } else {
-        val desc = items
-            .map { "${it.first} x${it.second}" }
-        ItemStack(items.first().first)
-            .renamed(label)
-            .lored(desc)
-    }
+    /**
+     * アイテム数毎
+     */
+    ByAmount,
 }
 
 class VirtualChestUseCase(private val repo: IVirtualChestRepository) {
@@ -78,7 +74,33 @@ class VirtualChestUseCase(private val repo: IVirtualChestRepository) {
         return true
     }
 
-    fun getVirtualChestPanel(): List<Inventory> {
+    /**
+     * インベントリからアイコンを作成
+     */
+    private fun createInventoryIcon(label: String, inventory: Inventory): ItemStack {
+        val items = inventory
+            .toList()
+            .summary()
+            .take(10)
+        return if (items.isEmpty()) {
+            val desc = listOf("@${inventory.location?.world?.name ?: "---"}")
+            ItemStack(Material.CHEST)
+                .renamed(label)
+                .lored(desc)
+        } else {
+            val desc = listOf("@${inventory.location?.world?.name ?: "---"}") +
+                    items
+                        .map { "${it.first} x${it.second}" }
+            ItemStack(items.first().first)
+                .renamed(label)
+                .lored(desc)
+        }
+    }
+
+    /**
+     * チェスト毎のアイテムサムネイルを作成
+     */
+    fun createItemIconsByChest(): List<ItemStack> {
         val chests = chestLocations
             .filter { it.value.block.state is InventoryHolder }
             .mapValues { (it.value.block.state as InventoryHolder).inventory }
@@ -87,26 +109,48 @@ class VirtualChestUseCase(private val repo: IVirtualChestRepository) {
                 createInventoryIcon(label, inventory)
             }
             .sortedBy { it.type }
-            .chunked(54 - 9)
-            .map {
-                Bukkit.createInventory(null, 54, VirtualChestConfig.virtualChestName)
-                    .apply {
-                        it.forEachIndexed { index, icon ->
-                            setItem(index, icon)
-                        }
-                        setItem(VirtualChestConfig.prevIndex, ItemStack(Material.PAPER).renamed("戻る"))
-                        setItem(VirtualChestConfig.nextIndex, ItemStack(Material.PAPER).renamed("進む"))
-                    }
-            }
-            .ifEmpty {
-                return Bukkit.createInventory(null, 54, VirtualChestConfig.virtualChestName)
-                    .apply {
-                        setItem(VirtualChestConfig.prevIndex, ItemStack(Material.PAPER).renamed("戻る"))
-                        setItem(VirtualChestConfig.nextIndex, ItemStack(Material.PAPER).renamed("進む"))
-                    }
-                    .let { inv -> listOf(inv) }
-            }
+    }
 
+    /**
+     * アイテム数毎のアイテムサムネイルを作成
+     */
+    fun createItemIconsByAmount(): List<ItemStack> {
+        val items = chestLocations
+            .filter { it.value.block.state is InventoryHolder }
+            .mapValues { (it.value.block.state as InventoryHolder).inventory }
+            .flatMap { it.value.toList() }
+
+        return items.summary()
+            .map {
+                ItemStack(it.first)
+                    .renamed("${it.first} x${it.second}")
+            }
+    }
+
+    /**
+     * パネルを作成
+     */
+    private fun createPanelInventory(icons: List<ItemStack>): Inventory {
+        return Bukkit.createInventory(null, 54, VirtualChestConfig.virtualChestName)
+            .apply {
+                icons.forEachIndexed { index, icon ->
+                    setItem(index, icon)
+                }
+                setItem(VirtualChestConfig.prev.index, VirtualChestConfig.prev.icon)
+                setItem(VirtualChestConfig.chest.index, VirtualChestConfig.chest.icon)
+                setItem(VirtualChestConfig.amount.index, VirtualChestConfig.amount.icon)
+                setItem(VirtualChestConfig.next.index, VirtualChestConfig.next.icon)
+            }
+    }
+
+    fun getVirtualChestPanel(panelType: VirtualChestPanelType): List<Inventory> {
+        return when (panelType) {
+            VirtualChestPanelType.ByChest -> createItemIconsByChest()
+            VirtualChestPanelType.ByAmount -> createItemIconsByAmount()
+        }
+            .chunked(54 - 9)
+            .ifEmpty { listOf(listOf()) }
+            .map { createPanelInventory(it) }
     }
 
     fun getInventories(): List<Pair<String, Inventory>> {
@@ -123,6 +167,55 @@ class VirtualChestUseCase(private val repo: IVirtualChestRepository) {
         if (label in virtualChests.keys) {
             return virtualChests[label]!!
         }
+        return null
+    }
+
+    fun clickIndex(type: VirtualChestPanelType, page: Int, index: Int): Inventory? {
+        val panels = getVirtualChestPanel(type)
+        val panel = panels[page]
+
+        when (index) {
+            in 0 until 45 -> {
+                if (index !in panel.toList().filterNotNull().indices)
+                    return null
+
+                when (type) {
+                    VirtualChestPanelType.ByChest -> {
+                        val chestKey = panel.getItem(index)!!.itemMeta?.displayName ?: return null
+                        return getInventory(chestKey)
+                    }
+                    VirtualChestPanelType.ByAmount -> {
+                        return null
+                        // TODO: withdraw item from chests
+                    }
+                }
+            }
+            VirtualChestConfig.prev.index -> {
+                VirtualChestEventHandler.currentPageIndex =
+                    Integer.max(0, page - 1)
+                val newPanel = getVirtualChestPanel(type)[VirtualChestEventHandler.currentPageIndex]
+                return newPanel
+            }
+            VirtualChestConfig.chest.index -> {
+                VirtualChestEventHandler.currentPageIndex = 0
+                VirtualChestEventHandler.currentPanelType = VirtualChestPanelType.ByChest
+                val newPanel = getVirtualChestPanel(VirtualChestEventHandler.currentPanelType)[VirtualChestEventHandler.currentPageIndex]
+                return newPanel
+            }
+            VirtualChestConfig.amount.index -> {
+                VirtualChestEventHandler.currentPageIndex = 0
+                VirtualChestEventHandler.currentPanelType = VirtualChestPanelType.ByAmount
+                val newPanel = getVirtualChestPanel(VirtualChestEventHandler.currentPanelType)[VirtualChestEventHandler.currentPageIndex]
+                return newPanel
+            }
+            VirtualChestConfig.next.index -> {
+                VirtualChestEventHandler.currentPageIndex =
+                    Math.min(panels.lastIndex, page + 1)
+                val newPanel = getVirtualChestPanel(VirtualChestEventHandler.currentPanelType)[VirtualChestEventHandler.currentPageIndex]
+                return newPanel
+            }
+        }
+
         return null
     }
 }
