@@ -51,9 +51,9 @@ class EfficientSurvival : JavaPlugin() {
 
     override fun onEnable() {
         server.broadcastMessage("$name ${server.version}")
-        plugin = this
-        registerEvents()
-        loadConfig()
+//        plugin = this
+//        registerEvents()
+//        loadConfig()
     }
 
     override fun onDisable() {

@@ -3,8 +3,8 @@ package tech.wakame.efficient_survival.virtualchest
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import tech.wakame.efficient_survival.util.CommandHandler
-import tech.wakame.efficient_survival.util.inspect
 import tech.wakame.efficient_survival.util.toParamsAndOptions
+import tech.wakame.efficient_survival.virtualchest.presentation.VirtualChestView
 
 class VirtualChestCommandHandler(private val useCase: VirtualChestUseCase) : CommandHandler() {
     init {
@@ -20,20 +20,8 @@ class VirtualChestCommandHandler(private val useCase: VirtualChestUseCase) : Com
         }
     }
 
-    private fun open(player: Player, panelType: VirtualChestPanelType): Boolean {
-        val panel = useCase.getVirtualChestPanel(panelType)
-        player.openInventory(panel[VirtualChestEventHandler.currentPageIndex])
-        return true
-    }
-
-    private fun summary(player: Player): Boolean {
-        useCase.getInventories()
-            .map {
-                "${it.first} @${it.second.location?.inspect() ?: "-"}"
-            }
-            .let {
-                player.sendMessage(*it.toTypedArray())
-            }
+    private fun open(player: Player): Boolean {
+        VirtualChestView.INVENTORY.open(player)
         return true
     }
 
@@ -42,8 +30,7 @@ class VirtualChestCommandHandler(private val useCase: VirtualChestUseCase) : Com
             return false
 
         return when {
-            params.size == 1 && params[0] == "open" -> open(sender, VirtualChestPanelType.ByChest)
-            params.size == 1 && params[0] == "ls" -> summary(sender)
+            params.size == 1 && params[0] == "open" -> open(sender)
             else -> false
         }
     }

@@ -27,3 +27,7 @@ fun List<ItemStack?>.summary(): List<Pair<Material, Int>> {
         .map { (m, iss) -> m to iss.map { it.amount }.sum() }
         .sortedByDescending { it.second }
 }
+
+fun ItemStack.inspect(): String {
+    return "$type x$amount"
+}

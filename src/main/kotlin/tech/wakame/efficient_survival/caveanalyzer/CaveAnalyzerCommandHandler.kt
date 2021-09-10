@@ -96,12 +96,12 @@ class CaveAnalyzerCommandHandler: CommandHandler() {
             return
         }
 
-        val minY = history.minBy { it.second }!!.second
-        val maxY = history.maxBy { it.second }!!.second
-        val minX = history.minBy { it.first }!!.first
-        val maxX = history.maxBy { it.first }!!.first
-        val minZ = history.minBy { it.third }!!.third
-        val maxZ = history.maxBy { it.third }!!.third
+        val minY = history.minByOrNull { it.second }!!.second
+        val maxY = history.minByOrNull { it.second }!!.second
+        val minX = history.minByOrNull { it.first }!!.first
+        val maxX = history.maxByOrNull { it.first }!!.first
+        val minZ = history.minByOrNull { it.third }!!.third
+        val maxZ = history.maxByOrNull { it.third }!!.third
 
         sender.sendMessage("[caveAnalysis] finished in $time ms")
         sender.sendMessage("[caveAnalysis] cave size: ${history.size} blocks, floor size: ${floors.size}")

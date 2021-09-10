@@ -13,3 +13,11 @@ inline fun <K, V : Any> Collection<K>.combineNotNull(crossinline transform: (K) 
         }
     }.toMap()
 }
+
+fun <K, V, R> Map<K, V>.mapValuesNotNull(transform: (Map.Entry<K, V>) -> R?): Map<K, R> {
+   return this.entries
+       .mapNotNull { entry ->
+           transform(entry)?.let { entry.key to it }
+       }
+       .toMap()
+}
